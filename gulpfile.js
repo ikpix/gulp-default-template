@@ -7,6 +7,7 @@ const ejs = require("gulp-ejs");
 const rename = require("gulp-rename");
 const beautify = require('gulp-beautify');
 const htmlmin = require('gulp-htmlmin');
+const browserSync = require('browser-sync').create();
 
 const path = {
 	css: {
@@ -16,7 +17,7 @@ const path = {
 	}, 
 	js: {
 		src: [
-			'./src/js/test.js'
+			'./src/js/script.js',
 		],
 		dist: './public/js',
 		file: '/scripts.js',
@@ -26,7 +27,11 @@ const path = {
 			'./src/views/**/index.ejs',
 		],
 		dist: './public',
-	}
+	},
+};
+
+const bsConf = {
+	baseDir: 'public',
 };
 
 function scss(cb) {
@@ -34,7 +39,8 @@ function scss(cb) {
 	gulp.src(cssPath.src)
 		.pipe(sass().on('error', sass.logError))
 		.pipe(autoprefixer())
-		.pipe(gulp.dest(cssPath.dist));
+		.pipe(gulp.dest(cssPath.dist))
+		.pipe(browserSync.stream());
 	cb();
 }
 
@@ -58,14 +64,24 @@ function ejsHtml(cb) {
 	cb();
 }
 
+function bs(cb) {
+	browserSync.init({
+		server: {
+			baseDir: bsConf.baseDir,
+		},
+		notify: false
+	});
+	cb();
+}
+
 function watch(cb) {
-	gulp.watch(path.js.src, js);
 	gulp.watch(path.css.src, scss);
-	gulp.watch(path.html.src, ejsHtml);
+	gulp.watch(path.js.src, js).on('change', browserSync.reload);
+	gulp.watch('./src/views/**/*.ejs', ejsHtml).on('change', browserSync.reload);
 	cb();
 }
 
 
-
-const parallel = gulp.parallel(watch);
-exports.default = gulp.series(ejsHtml, js, scss, parallel);
+const startup = gulp.series(ejsHtml, js, scss);
+const realtime = gulp.parallel(watch, bs);
+exports.default = gulp.series(startup, realtime);

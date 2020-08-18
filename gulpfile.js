@@ -70,7 +70,6 @@ function jsExtLibs(cb) {
 			return 'js/external/' + file;
 		});
 	} else files = null;
-	console.log(files);
 	Object.assign(ejsProps, {
 		extLibs: files,
 	});

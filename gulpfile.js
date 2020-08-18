@@ -21,7 +21,9 @@ const path = {
 		],
 		dist: './public/js',
 		file: '/scripts.js',
-		extLibs: [],
+		extLibs: [
+			//'./src/js/ext.js'
+		],
 		extDist: './public/js/external'
 	},
 	html: {
@@ -56,26 +58,27 @@ function js(cb) {
 }
 
 function jsExtLibs(cb) {
+	const fs = require('fs');
+	const pathModule = require('path');
 	const jsPath = path.js;
+	let files;
 	if (jsPath.extLibs.length > 0) {
-		gulp.src(jsPath.extLibs)
-			.pipe(gulp.dest(jsPath.extDist));
-	}
+		const dirPath = pathModule.join(jsPath.extDist);
+		if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath);
+		gulp.src(jsPath.extLibs).pipe(gulp.dest(jsPath.extDist));
+		files = fs.readdirSync(pathModule.join(jsPath.extDist)).map(file => {
+			return 'js/external/' + file;
+		});
+	} else files = null;
+	console.log(files);
+	Object.assign(ejsProps, {
+		extLibs: files,
+	});
 	cb();
 }
 
 function ejsHtml(cb) {
 	const pathHtml = path.html;
-	const fs = require('fs');
-	let files;
-	if (path.js.extLibs.length > 0) {
-		files = fs.readdirSync(path.js.extDist).map(file => {
-			return 'js/external/' + file;
-		});
-	} else files = null;
-	Object.assign(ejsProps, {
-		extLibs: files,
-	});
 	console.log(ejsProps);
 	gulp.src(pathHtml.src)
 		.pipe(ejs(

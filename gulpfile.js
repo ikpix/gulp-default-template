@@ -14,14 +14,15 @@ const path = {
 		src: './src/scss/**/*.scss',
 		dist: './public/css',
 		file: '/styles.css',
-	}, 
+	},
 	js: {
 		src: [
 			'./src/js/script.js',
 		],
 		dist: './public/js',
 		file: '/scripts.js',
-		extLibs: []
+		extLibs: [],
+		extDist: './public/js/external'
 	},
 	html: {
 		src: [
@@ -31,9 +32,7 @@ const path = {
 	},
 };
 
-const bsConf = {
-	baseDir: 'public',
-};
+const ejsProps = require('./ejsVaribles.json');
 
 function scss(cb) {
 	const cssPath = path.css;
@@ -48,7 +47,9 @@ function scss(cb) {
 function js(cb) {
 	const jsPath = path.js;
 	gulp.src(jsPath.src)
-		.pipe(babel({presets: ['@babel/env']}))
+		.pipe(babel({
+			presets: ['@babel/env']
+		}))
 		.pipe(concat(jsPath.file))
 		.pipe(gulp.dest(jsPath.dist));
 	cb();
@@ -58,22 +59,35 @@ function jsExtLibs(cb) {
 	const jsPath = path.js;
 	if (jsPath.extLibs.length > 0) {
 		gulp.src(jsPath.extLibs)
-		.pipe(gulp.dest(jsPath.dist));
+			.pipe(gulp.dest(jsPath.extDist));
 	}
 	cb();
 }
 
 function ejsHtml(cb) {
 	const pathHtml = path.html;
-	const vars = require('./ejsVaribles.json');
-	Object.assign(vars, {});
+	const fs = require('fs');
+	let files;
+	if (path.js.extLibs.length > 0) {
+		files = fs.readdirSync(path.js.extDist).map(file => {
+			return 'js/external/' + file;
+		});
+	} else files = null;
+	Object.assign(ejsProps, {
+		extLibs: files,
+	});
+	console.log(ejsProps);
 	gulp.src(pathHtml.src)
 		.pipe(ejs(
-			vars
+			ejsProps
 		))
-		.pipe(rename({extname: '.html'}))
+		.pipe(rename({
+			extname: '.html'
+		}))
 		.pipe(htmlmin())
-		.pipe(beautify.html({ indent_size: 2 }))
+		.pipe(beautify.html({
+			indent_size: 2
+		}))
 		.pipe(gulp.dest(pathHtml.dist));
 	cb();
 }
@@ -81,7 +95,7 @@ function ejsHtml(cb) {
 function bs(cb) {
 	browserSync.init({
 		server: {
-			baseDir: bsConf.baseDir,
+			baseDir: 'public',
 		},
 		notify: false
 	});
@@ -96,9 +110,6 @@ function watch(cb) {
 }
 
 
-const startup = gulp.series(jsExtLibs, ejsHtml, js, scss);
+const startup = gulp.series(jsExtLibs, js, scss, ejsHtml);
 const realtime = gulp.parallel(watch, bs);
 exports.default = gulp.series(startup, realtime);
-
-
-

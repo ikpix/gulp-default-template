@@ -1,1 +1,6 @@
+<% if (extLibs !== null) { %>
+ <% extLibs.forEach(path => { %>
+	<script src="<%- path %>"></script>
+ <% }) %>
+<% } %>
 <script src="js/scripts.js"></script>

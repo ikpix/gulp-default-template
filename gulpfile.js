@@ -21,6 +21,7 @@ const path = {
 		],
 		dist: './public/js',
 		file: '/scripts.js',
+		extLibs: []
 	},
 	html: {
 		src: [
@@ -53,10 +54,23 @@ function js(cb) {
 	cb();
 }
 
+function jsExtLibs(cb) {
+	const jsPath = path.js;
+	if (jsPath.extLibs.length > 0) {
+		gulp.src(jsPath.extLibs)
+		.pipe(gulp.dest(jsPath.dist));
+	}
+	cb();
+}
+
 function ejsHtml(cb) {
 	const pathHtml = path.html;
+	const vars = require('./ejsVaribles.json');
+	Object.assign(vars, {});
 	gulp.src(pathHtml.src)
-		.pipe(ejs())
+		.pipe(ejs(
+			vars
+		))
 		.pipe(rename({extname: '.html'}))
 		.pipe(htmlmin())
 		.pipe(beautify.html({ indent_size: 2 }))
@@ -82,6 +96,9 @@ function watch(cb) {
 }
 
 
-const startup = gulp.series(ejsHtml, js, scss);
+const startup = gulp.series(jsExtLibs, ejsHtml, js, scss);
 const realtime = gulp.parallel(watch, bs);
 exports.default = gulp.series(startup, realtime);
+
+
+

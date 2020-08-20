@@ -78,7 +78,6 @@ function jsExtLibs(cb) {
 
 function ejsHtml(cb) {
 	const pathHtml = path.html;
-	console.log(ejsProps);
 	gulp.src(pathHtml.src)
 		.pipe(ejs(
 			ejsProps

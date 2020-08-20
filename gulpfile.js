@@ -14,6 +14,8 @@ const path = {
 		src: './src/scss/**/*.scss',
 		dist: './public/css',
 		file: '/styles.css',
+		extStyles: {},
+		extDist: './public/css/external',
 	},
 	js: {
 		src: [
@@ -43,6 +45,22 @@ function scss(cb) {
 		.pipe(autoprefixer())
 		.pipe(gulp.dest(cssPath.dist))
 		.pipe(browserSync.stream());
+	cb();
+}
+
+function extCss(cb) {
+	const cssPath = path.css;
+	const extStyles = Object.keys(cssPath.extStyles);
+	if (extStyles.length) {
+		for (let key of extStyles) {
+			const currentPath = `${cssPath.extDist}/${key}`;
+			console.log(currentPath);
+			gulp.src(cssPath.extStyles[key])
+			.pipe(sass().on('error', sass.logError))
+			.pipe(autoprefixer())
+			.pipe(gulp.dest(currentPath));
+		}
+	}
 	cb();
 }
 
@@ -111,6 +129,6 @@ function watch(cb) {
 }
 
 
-const startup = gulp.series(jsExtLibs, js, scss, ejsHtml);
+const startup = gulp.series(jsExtLibs, js, extCss, scss, ejsHtml);
 const realtime = gulp.parallel(watch, bs);
 exports.default = gulp.series(startup, realtime);

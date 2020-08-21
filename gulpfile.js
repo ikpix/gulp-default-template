@@ -54,7 +54,6 @@ function extCss(cb) {
 	if (extStyles.length) {
 		for (let key of extStyles) {
 			const currentPath = `${cssPath.extDist}/${key}`;
-			console.log(currentPath);
 			gulp.src(cssPath.extStyles[key])
 			.pipe(sass().on('error', sass.logError))
 			.pipe(autoprefixer())
